@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tab &amp; Tally</title>
+<meta name="theme-color" content="#7B1E34">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tab & Tally">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Figtree:wght@400;500;600;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3EADB; --surface:#FFFBF4; --surface-2:#F8F0E3; --ink:#2B1B1F; --muted:#6E5A5E;
+  --line:#E0D1BA; --wine:#7B1E34; --wine-deep:#561325; --wine-soft:#F3DDE1;
+  --brass:#A87B2E; --good:#3F6B4A; --warn:#9A4A12;
+  --slip:#FFFEF9; --slip-ink:#2A2226;
+  --serif:"Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --sans:"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono:"Courier Prime", "Courier New", ui-monospace, monospace;
+  --r-sm:8px; --r-md:14px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1A1113; --surface:#251A1D; --surface-2:#2E2125; --ink:#F1E6D6; --muted:#B7A3A6;
+    --line:#3E2D32; --wine:#E28C9D; --wine-deep:#F2B3BF; --wine-soft:#3D2128;
+    --brass:#D8AC5A; --good:#8FC39B; --warn:#E8A06A; --slip:#F7F1E4; --slip-ink:#2A2226;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1A1113; --surface:#251A1D; --surface-2:#2E2125; --ink:#F1E6D6; --muted:#B7A3A6;
+  --line:#3E2D32; --wine:#E28C9D; --wine-deep:#F2B3BF; --wine-soft:#3D2128;
+  --brass:#D8AC5A; --good:#8FC39B; --warn:#E8A06A; --slip:#F7F1E4; --slip-ink:#2A2226;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);min-height:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+.app{max-width:600px;margin:0 auto;padding:0 16px 120px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;padding:20px 2px 10px}
+.brand{font-family:var(--serif);font-size:1.75rem;line-height:1.1;color:var(--wine);margin:0;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--sans);font-size:.8rem;color:var(--muted);letter-spacing:0;margin-top:4px}
+
+section.block{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;margin:14px 0}
+section.block > h2{font-family:var(--serif);font-weight:400;font-size:1.25rem;margin:0 0 12px;color:var(--ink)}
+.hint{color:var(--muted);font-size:.875rem;margin:4px 0 0}
+label.f{display:block;font-size:.85rem;font-weight:600;color:var(--muted);margin:12px 0 4px}
+input.t,select.t,textarea.t{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 12px;min-height:44px}
+textarea.t{min-height:84px;resize:vertical}
+input.t:focus,select.t:focus,textarea.t:focus{border-color:var(--wine);outline:none;box-shadow:0 0 0 3px var(--wine-soft)}
+.row{display:flex;gap:10px}
+.row > *{flex:1;min-width:0}
+.row.loc > :first-child{flex:1.5}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-weight:600}
+.btn.primary{background:var(--wine);border-color:var(--wine);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#1A1113}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#1A1113}}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--warn);background:transparent}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.scan{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scan label.btn{width:100%}
+.scan input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.ocr-status{margin-top:12px;display:none}
+.ocr-status.on{display:block}
+.bar{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--wine);transition:width .25s}
+.ocr-msg{font-size:.875rem;margin-top:6px;color:var(--muted)}
+.ocr-msg.bad{color:var(--warn)}
+details.raw{margin-top:8px;font-size:.85rem}
+details.raw pre{white-space:pre-wrap;font-family:var(--mono);background:var(--surface-2);padding:10px;border-radius:var(--r-sm);max-height:220px;overflow:auto}
+
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:999px;min-height:40px;padding:6px 8px;font-weight:600;font-size:.9rem;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--wine);box-shadow:0 1px 2px rgba(60,20,30,.15)}
+.seg button:disabled{opacity:.4}
+
+.items{margin-top:12px}
+.item{display:grid;grid-template-columns:44px 1fr 78px 40px 28px;gap:6px;align-items:center;margin-bottom:8px}
+.item input{min-height:42px;padding:8px}
+.item .kind{min-height:42px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);cursor:pointer;font-size:1.05rem}
+.item .del{border:0;background:transparent;color:var(--muted);font-size:1.3rem;cursor:pointer;min-height:42px}
+.item-heads{display:grid;grid-template-columns:44px 1fr 78px 40px 28px;gap:6px;font-size:.75rem;color:var(--muted);font-weight:600;padding:0 2px 4px}
+.money{text-align:right;font-variant-numeric:tabular-nums}
+
+.tip-top{display:flex;align-items:baseline;gap:10px}
+.tip-pct{font-family:var(--serif);font-size:3rem;line-height:1;color:var(--wine)}
+.tip-top .hint{margin:0}
+input[type=range]{width:100%;margin:14px 0 6px;accent-color:var(--wine);height:32px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 12px;min-height:36px;font-weight:600;font-size:.875rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--wine);border-color:var(--wine);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#1A1113}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#1A1113}}
+.basis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.basis button{text-align:left;border:1.5px solid var(--line);background:var(--surface-2);border-radius:var(--r-md);padding:12px;cursor:pointer}
+.basis button[aria-pressed="true"]{border-color:var(--wine);background:var(--wine-soft)}
+.basis .lbl{display:block;font-size:.8rem;color:var(--muted);font-weight:600}
+.basis .amt{display:block;font-family:var(--serif);font-size:1.5rem;margin-top:2px}
+.basis .sub{display:block;font-size:.8rem;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:.95rem}
+.check input{width:22px;height:22px;accent-color:var(--wine)}
+
+.stepper{display:flex;align-items:center;gap:12px;margin-top:12px}
+.stepper button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);font-size:1.3rem;cursor:pointer}
+.stepper output{font-family:var(--serif);font-size:1.6rem;min-width:2ch;text-align:center}
+.people{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.person{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 6px 4px 12px;font-weight:600;font-size:.9rem}
+.person button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1.05rem;min-width:28px;min-height:28px}
+.assign{margin-top:14px;border-top:1px dashed var(--line);padding-top:8px}
+.assign-row{padding:8px 0;border-bottom:1px dashed var(--line)}
+.assign-row .nm{display:flex;justify-content:space-between;font-weight:600;font-size:.95rem}
+.assign-row .chips{margin-top:6px}
+.assign-row .chip{min-height:32px;padding:4px 10px;font-size:.8rem}
+
+/* The check: receipt slip */
+.slip-wrap{margin:22px 0 14px;filter:drop-shadow(0 6px 10px rgba(60,20,30,.14))}
+.slip{background:var(--slip);color:var(--slip-ink);font-family:var(--mono);padding:22px 20px 34px;font-size:.95rem;
+  -webkit-mask:linear-gradient(#000,#000) top/100% calc(100% - 12px) no-repeat, conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 12px repeat-x;
+          mask:linear-gradient(#000,#000) top/100% calc(100% - 12px) no-repeat, conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) bottom/16px 12px repeat-x}
+.slip h3{font-family:var(--serif);font-weight:400;text-align:center;font-size:1.3rem;margin:0}
+.slip .where{text-align:center;font-size:.85rem;margin:2px 0 12px;color:#6d5d61}
+.slip .ln{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.slip .ln span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
+.slip .rule{border-top:1.5px dashed #b9aaa0;margin:8px 0}
+.slip .grand{font-weight:700;font-size:1.25rem;padding:6px 0}
+.slip .dim{color:#7a6a6e}
+.slip .pp{margin-top:6px}
+.slip .pp .ln{font-weight:700}
+.slip .pp small{display:block;font-weight:400;color:#7a6a6e;font-size:.78rem;margin:-2px 0 4px}
+.slip .empty{text-align:center;color:#7a6a6e;padding:12px 0}
+
+.stars{display:flex;gap:4px}
+.stars button{border:0;background:transparent;font-size:2rem;line-height:1;color:var(--line);cursor:pointer;padding:4px;min-width:44px;min-height:44px}
+.stars button.on{color:var(--brass)}
+.stars.sm button{font-size:1.3rem;min-width:32px;min-height:32px;padding:2px}
+.dish{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;margin-top:10px;background:var(--surface-2)}
+.dish .top{display:flex;gap:8px;align-items:center}
+.dish .top input{flex:1}
+.dish textarea{margin-top:8px;min-height:60px}
+
+.actions{display:flex;gap:10px;margin:18px 0}
+.actions .btn{flex:1}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav.tabs .in{display:flex;max-width:600px;width:100%}
+nav.tabs button{flex:1;border:0;background:transparent;padding:10px 4px 12px;min-height:56px;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-current="page"]{color:var(--wine)}
+
+.view{display:none}.view.on{display:block}
+
+/* History */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px}
+.stat b{display:block;font-family:var(--serif);font-weight:400;font-size:1.35rem}
+.stat span{font-size:.78rem;color:var(--muted)}
+.list{margin-top:12px}
+.entry{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.entry .l1{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.entry .l1 .n{font-family:var(--serif);font-weight:400;font-size:1.1rem}
+.entry .l2{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;color:var(--muted);margin-top:2px}
+.st{color:var(--brass);letter-spacing:1px}
+.empty-state{text-align:center;padding:36px 12px;color:var(--muted)}
+.empty-state p{margin:6px 0 16px}
+
+dialog{border:0;border-radius:var(--r-md);padding:0;max-width:560px;width:calc(100% - 24px);background:var(--bg);color:var(--ink);max-height:88vh}
+dialog::backdrop{background:rgba(30,10,15,.55)}
+dialog .dlg{padding:18px;overflow:auto;max-height:88vh}
+dialog .dlg h2{font-family:var(--serif);font-weight:400;margin:0 0 4px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;font-size:.95rem}
+.note b{font-weight:600}
+
+.rates{width:100%;border-collapse:collapse;font-size:.95rem}
+.rates td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+.rates input{width:80px;text-align:right}
+.rates td.c{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:380px){
+  .item,.item-heads{grid-template-columns:40px 1fr 72px 36px 26px}
+  .tip-pct{font-size:2.5rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1 class="brand">Tab &amp; Tally<small>Split the check, keep the memory</small></h1>
+  </header>
+
+  <!-- NEW CHECK -->
+  <main id="v-new" class="view on" aria-label="New check">
+    <section class="block" aria-labelledby="h-where">
+      <h2 id="h-where">Where did you eat?</h2>
+      <div class="scan">
+        <label class="btn primary" for="cam">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scan receipt</label>
+        <input id="cam" type="file" accept="image/*" capture="environment">
+        <label class="btn" for="pick">Choose photo</label>
+        <input id="pick" type="file" accept="image/*">
+        <button type="button" class="btn" id="paste" style="grid-column:1/-1">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg>
+          Paste from Shortcut</button>
+      </div>
+      <p class="hint">Run the Read Receipt shortcut, then tap Paste from Shortcut. Or scan here: one receipt per photo, flat and well lit. Every number stays editable.</p>
+      <div class="ocr-status" id="ocr">
+        <div class="bar"><i id="ocr-bar"></i></div>
+        <div class="ocr-msg" id="ocr-msg"></div>
+        <details class="raw" id="ocr-raw" hidden><summary>Show text read from the photo</summary><pre id="ocr-text"></pre></details>
+      </div>
+
+      <label class="f" for="r-name">Restaurant</label>
+      <input class="t" id="r-name" list="rest-list" autocomplete="off" placeholder="Restaurant name">
+      <datalist id="rest-list"></datalist>
+      <div class="row loc">
+        <div>
+          <label class="f" for="r-loc">Location (sets tax)</label>
+          <select class="t" id="r-loc"></select>
+        </div>
+        <div>
+          <label class="f" for="r-date">Date</label>
+          <input class="t" id="r-date" type="date">
+        </div>
+      </div>
+      <div id="custom-rate-wrap" hidden>
+        <label class="f" for="r-custom">Combined tax rate for this place (%)</label>
+        <input class="t" id="r-custom" type="number" inputmode="decimal" step="0.01" min="0" max="30">
+      </div>
+      <p class="hint" id="rate-hint"></p>
+    </section>
+
+    <section class="block" aria-labelledby="h-order">
+      <h2 id="h-order">What was on the check?</h2>
+      <div class="seg" role="group" aria-label="Entry method">
+        <button type="button" data-mode="items" aria-pressed="true">Itemized</button>
+        <button type="button" data-mode="total" aria-pressed="false">Total only</button>
+      </div>
+      <div id="mode-items">
+        <div class="items">
+          <div class="item-heads"><span>Qty</span><span>Item</span><span class="money">Price</span><span title="Food or drink">Type</span><span></span></div>
+          <div id="item-list"></div>
+          <button type="button" class="btn ghost" id="add-item">+ Add item</button>
+        </div>
+        <label class="f" for="tax-override">Tax printed on receipt (optional)</label>
+        <input class="t money" id="tax-override" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Leave blank to calculate">
+        <p class="hint">Blank uses the location's rate. Enter the printed tax if the receipt shows one.</p>
+      </div>
+      <div id="mode-total" hidden>
+        <label class="f" for="total-in">Total charged, including tax, before tip</label>
+        <input class="t money" id="total-in" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00">
+        <p class="hint">For card slips that show only one amount. Food and drink are worked out by removing the location's tax.</p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="h-tip">
+      <h2 id="h-tip">Tip</h2>
+      <div class="tip-top"><span class="tip-pct" id="tip-pct">20%</span><p class="hint" id="tip-eff"></p></div>
+      <input type="range" id="tip-range" min="10" max="25" step="1" value="20" aria-label="Tip percentage">
+      <div class="chips" id="tip-chips"></div>
+      <div class="basis" role="group" aria-label="Tip based on">
+        <button type="button" data-basis="pre" aria-pressed="true"><span class="lbl">On food &amp; drink</span><span class="amt" id="tip-pre">$0.00</span><span class="sub">before tax</span></button>
+        <button type="button" data-basis="post" aria-pressed="false"><span class="lbl">On total with tax</span><span class="amt" id="tip-post">$0.00</span><span class="sub">tax included</span></button>
+      </div>
+      <label class="check"><input type="checkbox" id="round-up"> Round the final total up to the next dollar</label>
+    </section>
+
+    <section class="block" aria-labelledby="h-split">
+      <h2 id="h-split">Who's paying?</h2>
+      <div class="seg" role="group" aria-label="Payment">
+        <button type="button" data-split="full" aria-pressed="true">One check</button>
+        <button type="button" data-split="even" aria-pressed="false">Split evenly</button>
+        <button type="button" data-split="items" aria-pressed="false">By item</button>
+      </div>
+      <div id="split-even" hidden>
+        <div class="stepper"><button type="button" id="cnt-dn" aria-label="Fewer people">−</button><output id="cnt">2</output><button type="button" id="cnt-up" aria-label="More people">+</button><span class="hint" style="margin:0">people</span></div>
+      </div>
+      <div id="split-items" hidden>
+        <p class="hint" id="items-split-hint">Add everyone at the table, then tap names under each item. Items with no one tapped are shared by all.</p>
+        <div class="row" style="margin-top:10px">
+          <input class="t" id="person-in" placeholder="Name" autocomplete="off">
+          <button type="button" class="btn" id="add-person" style="flex:0 0 auto">Add</button>
+        </div>
+        <div class="people" id="people"></div>
+        <div class="assign" id="assign"></div>
+      </div>
+    </section>
+
+    <div class="slip-wrap" aria-live="polite">
+      <div class="slip" id="slip"></div>
+    </div>
+
+    <section class="block" aria-labelledby="h-review">
+      <h2 id="h-review">Your review</h2>
+      <div class="stars" id="stars" role="radiogroup" aria-label="Restaurant rating"></div>
+      <label class="f" for="comment">About the restaurant</label>
+      <textarea class="t" id="comment" placeholder="Service, atmosphere, would you go back?"></textarea>
+      <label class="f">Dishes worth remembering</label>
+      <p class="hint" style="margin-top:0">Dishes added from items are kept only if you rate them or add a note.</p>
+      <div id="dishes"></div>
+      <div class="row" style="margin-top:10px">
+        <button type="button" class="btn ghost" id="add-dish">+ Add a dish</button>
+        <button type="button" class="btn ghost" id="dish-from-items">Add from items</button>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="btn" id="reset">Start over</button>
+      <button type="button" class="btn primary" id="save">Save visit</button>
+    </div>
+  </main>
+
+  <!-- HISTORY -->
+  <main id="v-history" class="view" aria-label="History">
+    <div class="stats" id="stats"></div>
+    <div class="row" style="margin-top:12px">
+      <input class="t" id="search" type="search" placeholder="Search restaurants, dishes, notes">
+    </div>
+    <div class="seg" role="group" aria-label="History view" style="margin-top:10px">
+      <button type="button" data-hv="visits" aria-pressed="true">Visits</button>
+      <button type="button" data-hv="places" aria-pressed="false">Restaurants</button>
+    </div>
+    <div class="list" id="hist"></div>
+  </main>
+
+  <!-- SETTINGS -->
+  <main id="v-settings" class="view" aria-label="Settings">
+    <section class="block">
+      <h2>Tax rates</h2>
+      <table class="rates" id="rates"></table>
+      <p class="hint">Virginia sales tax on restaurant food plus each locality's meals tax. Checked September 2026: Roanoke City 6.5%, Salem 6%, Roanoke County 4%. Update here if a locality changes its rate.</p>
+    </section>
+    <section class="block">
+      <h2>Defaults</h2>
+      <label class="f" for="def-tip">Starting tip</label>
+      <select class="t" id="def-tip"></select>
+      <label class="f" for="def-basis">Tip based on</label>
+      <select class="t" id="def-basis"><option value="pre">Food &amp; drink (before tax)</option><option value="post">Total with tax</option></select>
+      <label class="f" for="me-name">Your name (first person when splitting by item)</label>
+      <input class="t" id="me-name" placeholder="Me">
+      <label class="f" for="theme">Appearance</label>
+      <select class="t" id="theme"><option value="">Match device</option><option value="light">Light</option><option value="dark">Dark</option></select>
+    </section>
+    <section class="block">
+      <h2>Your data</h2>
+      <p class="hint" style="margin-top:0">Visits are stored only on this device. Export a spreadsheet, or keep a backup file to move to another device.</p>
+      <div class="actions" style="flex-wrap:wrap">
+        <button type="button" class="btn" id="export-csv">Export CSV</button>
+        <button type="button" class="btn" id="export-json">Save backup</button>
+        <label class="btn" for="import-json">Restore backup</label>
+        <input id="import-json" type="file" accept="application/json,.json" class="sr">
+      </div>
+      <button type="button" class="btn danger wide" id="wipe">Delete all visits</button>
+    </section>
+    <p class="hint" style="text-align:center">Receipt reading runs on this device. Photos are never uploaded or saved.</p>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Sections"><div class="in">
+  <button type="button" data-view="new" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>New check</button>
+  <button type="button" data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
+  <button type="button" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+</div></nav>
+
+<dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+window.TT_PWA=true;
+window.TT_OCR={script:"./ocr/tesseract.min.js",workerPath:"./ocr/worker.min.js",corePath:"./ocr/",langPath:"./ocr",workerBlobURL:false};
+</script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+const $m=n=>fmt.format(isFinite(n)?n:0);
+const r2=n=>Math.round((n+Number.EPSILON)*100)/100;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const DRINK_RE=/\b(tea|coffee|soda|coke|pepsi|sprite|dr\.? ?pepper|beer|ipa|lager|ale|wine|merlot|cabernet|chardonnay|pinot|lemonade|juice|water|latte|espresso|cappuccino|mocha|drink|margarita|cocktail|martini|mimosa|bourbon|whiskey|vodka|tequila|milk|shake|smoothie|refill|fountain|pop)\b/i;
+
+/* ---------- Storage ---------- */
+const KEY="tabtally.v1";
+const DEFAULTS={
+  settings:{state:5.3, local:{roanoke_city:6.5,salem:6,roanoke_county:4}, defTip:20, defBasis:"pre", me:"", theme:""},
+  visits:[], places:{}
+};
+let db;
+function load(){
+  try{const raw=localStorage.getItem(KEY); db=raw?JSON.parse(raw):null}catch(e){db=null}
+  if(!db||typeof db!=="object") db=JSON.parse(JSON.stringify(DEFAULTS));
+  db.settings=Object.assign({},DEFAULTS.settings,db.settings||{});
+  db.settings.local=Object.assign({},DEFAULTS.settings.local,db.settings.local||{});
+  db.visits=Array.isArray(db.visits)?db.visits:[]; db.places=db.places||{};
+}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));return true}catch(e){toast("Couldn't save on this device. Storage may be full or blocked.");return false}}
+
+const LOCS=[
+  {id:"roanoke_city",label:"Roanoke City"},
+  {id:"salem",label:"Salem"},
+  {id:"roanoke_county",label:"Roanoke County"},
+  {id:"other",label:"Somewhere else"}
+];
+function combinedRate(loc,custom){
+  if(loc==="other") return Math.max(0,parseFloat(custom)||0);
+  return r2((db.settings.state||0)+(db.settings.local[loc]||0));
+}
+
+/* ---------- State ---------- */
+let S;
+function fresh(){
+  const s=db.settings;
+  return {id:null,name:"",loc:lastLoc(),custom:"",date:today(),mode:"items",
+    items:[newItem()],taxOverride:"",total:"",tip:s.defTip,basis:s.defBasis,roundUp:false,
+    split:"full",count:2,people:[{id:uid(),name:s.me||"Me"}],rating:0,comment:"",dishes:[],phone:"",address:""};
+}
+function newItem(p){return Object.assign({id:uid(),qty:1,name:"",price:"",kind:"food",who:[]},p||{})}
+function lastLoc(){const v=db.visits[0];return v?v.loc:"roanoke_city"}
+
+/* ---------- Math ---------- */
+function compute(){
+  const rate=combinedRate(S.loc,S.custom)/100;
+  let food=0,drink=0,pre,tax,bill,taxSource;
+  if(S.mode==="items"){
+    for(const it of S.items){const a=(parseFloat(it.price)||0)*(parseFloat(it.qty)||0); if(it.kind==="drink")drink+=a; else food+=a}
+    food=r2(food);drink=r2(drink);pre=r2(food+drink);
+    const ov=parseFloat(S.taxOverride);
+    if(S.taxOverride!==""&&isFinite(ov)){tax=r2(ov);taxSource="receipt"}else{tax=r2(pre*rate);taxSource="rate"}
+    bill=r2(pre+tax);
+  }else{
+    bill=r2(parseFloat(S.total)||0); pre=r2(bill/(1+rate)); tax=r2(bill-pre); taxSource="derived";
+  }
+  const pct=S.tip/100;
+  const tipPre=r2(pre*pct), tipPost=r2(bill*pct);
+  let tip=S.basis==="post"?tipPost:tipPre;
+  let grand=r2(bill+tip);
+  if(S.roundUp&&grand>0){const up=Math.ceil(grand-1e-9);tip=r2(tip+(up-grand));grand=up}
+  const effPre=pre>0?tip/pre*100:0;
+  return {rate:rate*100,food,drink,pre,tax,bill,tipPre,tipPost,tip,grand,taxSource,effPre,shares:shares(pre,tax,tip,grand)};
+}
+function allocate(totalCents,weights){
+  const sum=weights.reduce((a,b)=>a+b,0);
+  if(sum<=0) return weights.map(()=>0);
+  const raw=weights.map(w=>totalCents*w/sum), base=raw.map(Math.floor);
+  let rem=totalCents-base.reduce((a,b)=>a+b,0);
+  raw.map((v,i)=>[v-base[i],i]).sort((a,b)=>b[0]-a[0]).forEach(([,i])=>{if(rem>0){base[i]++;rem--}});
+  return base;
+}
+function shares(pre,tax,tip,grand){
+  const gc=Math.round(grand*100);
+  if(S.split==="even"){
+    const n=Math.max(1,S.count|0); const c=allocate(gc,Array(n).fill(1));
+    return c.map((x,i)=>({name:`Person ${i+1}`,amount:x/100}));
+  }
+  if(S.split==="items"&&S.mode==="items"&&S.people.length){
+    const w={}; S.people.forEach(p=>w[p.id]=0);
+    for(const it of S.items){
+      const a=(parseFloat(it.price)||0)*(parseFloat(it.qty)||0); if(!a)continue;
+      let who=it.who.filter(id=>id in w); if(!who.length) who=Object.keys(w);
+      who.forEach(id=>w[id]+=a/who.length);
+    }
+    const ws=S.people.map(p=>w[p.id]);
+    const tot=allocate(gc,ws), fc=allocate(Math.round(pre*100),ws), tc=allocate(Math.round(tax*100),ws), tp=allocate(Math.round(tip*100),ws);
+    return S.people.map((p,i)=>({name:p.name,amount:tot[i]/100,pre:fc[i]/100,tax:tc[i]/100,tip:tp[i]/100}));
+  }
+  return [{name:"Whole table",amount:grand}];
+}
+
+/* ---------- Rendering ---------- */
+function renderLocSelect(){
+  $("#r-loc").innerHTML=LOCS.map(l=>{
+    const r=l.id==="other"?"custom":combinedRate(l.id).toFixed(1)+"%";
+    return `<option value="${l.id}">${l.label} (${r})</option>`}).join("");
+}
+function renderItems(){
+  $("#item-list").innerHTML=S.items.map(it=>`
+    <div class="item" data-id="${it.id}">
+      <input class="t" aria-label="Quantity" type="number" inputmode="numeric" min="0" step="1" data-f="qty" value="${esc(it.qty)}">
+      <input class="t" aria-label="Item name" data-f="name" value="${esc(it.name)}" placeholder="Item">
+      <input class="t money" aria-label="Price each" type="number" inputmode="decimal" step="0.01" min="0" data-f="price" value="${esc(it.price)}" placeholder="0.00">
+      <button type="button" class="kind" data-act="kind" aria-label="${it.kind==="drink"?"Drink, tap for food":"Food, tap for drink"}" title="${it.kind==="drink"?"Drink":"Food"}">${it.kind==="drink"?"🥤":"🍽️"}</button>
+      <button type="button" class="del" data-act="del" aria-label="Remove item">×</button>
+    </div>`).join("");
+}
+function renderPeople(){
+  $("#people").innerHTML=S.people.map(p=>`<span class="person">${esc(p.name)}<button type="button" data-pid="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></span>`).join("");
+  const priced=S.items.filter(it=>(parseFloat(it.price)||0)>0);
+  $("#assign").innerHTML=priced.length?priced.map(it=>`
+    <div class="assign-row" data-id="${it.id}">
+      <div class="nm"><span>${esc(it.name||"Item")}${(parseFloat(it.qty)||1)>1?` ×${esc(it.qty)}`:""}</span><span class="money">${$m((parseFloat(it.price)||0)*(parseFloat(it.qty)||0))}</span></div>
+      <div class="chips">${S.people.map(p=>`<button type="button" class="chip" data-pid="${p.id}" aria-pressed="${it.who.includes(p.id)}">${esc(p.name)}</button>`).join("")}</div>
+    </div>`).join(""):`<p class="hint">Add items with prices above to assign them.</p>`;
+}
+function renderStars(el,val,size){
+  el.innerHTML=[1,2,3,4,5].map(n=>`<button type="button" role="radio" aria-checked="${n===val}" aria-label="${n} star${n>1?"s":""}" data-star="${n}" class="${n<=val?"on":""}">★</button>`).join("");
+}
+function renderDishes(){
+  $("#dishes").innerHTML=S.dishes.map(d=>`
+    <div class="dish" data-id="${d.id}">
+      <div class="top"><input class="t" data-f="name" value="${esc(d.name)}" placeholder="Dish" aria-label="Dish name"><button type="button" class="del btn ghost" data-act="del" aria-label="Remove dish" style="min-width:44px;padding:0">×</button></div>
+      <div class="stars sm" data-dstars="${d.id}"></div>
+      <textarea class="t" data-f="note" placeholder="What stood out? Who ordered it?" aria-label="Dish notes">${esc(d.note)}</textarea>
+    </div>`).join("");
+  S.dishes.forEach(d=>renderStars($(`[data-dstars="${d.id}"]`),d.rating));
+}
+function syncForm(){
+  $("#r-name").value=S.name; $("#r-loc").value=S.loc; $("#r-date").value=S.date; $("#r-custom").value=S.custom;
+  $("#custom-rate-wrap").hidden=S.loc!=="other";
+  $$("[data-mode]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===S.mode));
+  $("#mode-items").hidden=S.mode!=="items"; $("#mode-total").hidden=S.mode!=="total";
+  $("#tax-override").value=S.taxOverride; $("#total-in").value=S.total;
+  $("#tip-range").value=S.tip; $("#round-up").checked=S.roundUp;
+  $("#comment").value=S.comment;
+  if(S.mode==="total"&&S.split==="items")S.split="even";
+  renderItems(); renderPeople(); renderDishes(); renderStars($("#stars"),S.rating);
+  update();
+}
+function update(){
+  const c=compute();
+  $("#rate-hint").textContent=S.loc==="other"
+    ?`Using ${c.rate.toFixed(2)}% combined tax.`
+    :`Tax ${c.rate.toFixed(1)}%: Virginia ${db.settings.state}% + local meals ${db.settings.local[S.loc]}%.`;
+  $("#tip-pct").textContent=S.tip+"%";
+  $$("#tip-chips .chip").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.t===S.tip));
+  $("#tip-pre").textContent=$m(c.tipPre); $("#tip-post").textContent=$m(c.tipPost);
+  $$("[data-basis]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.basis===S.basis));
+  $("#tip-eff").textContent=S.roundUp&&c.grand>0?`Rounded tip ${$m(c.tip)}, ${c.effPre.toFixed(1)}% of food & drink`:"";
+  $$("[data-split]").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.split===S.split); if(b.dataset.split==="items") b.disabled=S.mode==="total"});
+  $("#split-even").hidden=S.split!=="even"; $("#split-items").hidden=S.split!=="items";
+  $("#cnt").textContent=S.count;
+  renderSlip(c);
+  return c;
+}
+function slipHTML(v,c){
+  if(!(c.bill>0)) return `<h3>${esc(v.name||"The check")}</h3><p class="empty">Scan a receipt or enter items to see the total.</p>`;
+  const locLabel=(LOCS.find(l=>l.id===v.loc)||{}).label||"";
+  const d=v.date?new Date(v.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
+  let h=`<h3>${esc(v.name||"The check")}</h3><p class="where">${esc(locLabel)}${d?", "+d:""}</p>`;
+  if(v.mode==="items"){
+    if(c.food) h+=`<div class="ln"><span>Food</span><span>${$m(c.food)}</span></div>`;
+    if(c.drink) h+=`<div class="ln"><span>Drinks</span><span>${$m(c.drink)}</span></div>`;
+  }
+  h+=`<div class="ln"><span>Food &amp; drink${v.mode==="total"?" (est.)":""}</span><span>${$m(c.pre)}</span></div>`;
+  h+=`<div class="ln"><span>Tax ${c.taxSource==="receipt"?"(from receipt)":c.rate.toFixed(1)+"%"}</span><span>${$m(c.tax)}</span></div>`;
+  h+=`<div class="rule"></div><div class="ln"><span>Total with tax</span><span>${$m(c.bill)}</span></div>`;
+  h+=`<div class="ln"><span>Tip ${v.tip}% on ${v.basis==="post"?"total":"food &amp; drink"}${v.roundUp?", rounded":""}</span><span>${$m(c.tip)}</span></div>`;
+  h+=`<div class="rule"></div><div class="ln grand"><span>Grand total</span><span>${$m(c.grand)}</span></div>`;
+  if(c.shares.length>1){
+    h+=`<div class="rule"></div><div class="pp">`;
+    if(v.split==="even"){
+      const amts=c.shares.map(s=>s.amount), hi=Math.max(...amts), lo=Math.min(...amts);
+      h+=`<div class="ln"><span>Each of ${c.shares.length} pays</span><span>${$m(lo)}</span></div>`;
+      if(hi!==lo){const k=amts.filter(a=>a===hi).length;h+=`<small>${k} ${k>1?"people pay":"person pays"} ${$m(hi)} so it adds up exactly</small>`}
+    }else{
+      c.shares.forEach(s=>{h+=`<div class="ln"><span>${esc(s.name)}</span><span>${$m(s.amount)}</span></div><small>${$m(s.pre)} + ${$m(s.tax)} tax + ${$m(s.tip)} tip</small>`});
+    }
+    h+=`</div>`;
+  }
+  return h;
+}
+function renderSlip(c){$("#slip").innerHTML=slipHTML(S,c)}
+
+/* ---------- Events: new check ---------- */
+function bindNew(){
+  $("#r-name").addEventListener("input",e=>{S.name=e.target.value});
+  $("#r-name").addEventListener("change",e=>{
+    const p=db.places[e.target.value.trim().toLowerCase()];
+    if(p&&p.loc){S.loc=p.loc; if(p.custom)S.custom=p.custom; $("#r-loc").value=S.loc; $("#r-custom").value=S.custom; $("#custom-rate-wrap").hidden=S.loc!=="other"}
+    update();
+  });
+  $("#r-loc").addEventListener("change",e=>{S.loc=e.target.value;$("#custom-rate-wrap").hidden=S.loc!=="other";update()});
+  $("#r-custom").addEventListener("input",e=>{S.custom=e.target.value;update()});
+  $("#r-date").addEventListener("change",e=>{S.date=e.target.value;update()});
+  $$("[data-mode]").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode; if(S.mode==="total"&&S.split==="items")S.split="even"; syncForm()}));
+  $("#item-list").addEventListener("input",e=>{
+    const row=e.target.closest(".item"); if(!row)return; const it=S.items.find(i=>i.id===row.dataset.id);
+    it[e.target.dataset.f]=e.target.value;
+    if(e.target.dataset.f==="name"&&!it._kindSet){const k=DRINK_RE.test(it.name)?"drink":"food"; if(k!==it.kind){it.kind=k;const kb=row.querySelector(".kind");kb.textContent=k==="drink"?"🥤":"🍽️";kb.title=k==="drink"?"Drink":"Food"}}
+    if(S.split==="items")renderPeople(); update();
+  });
+  $("#item-list").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b)return; const row=b.closest(".item"); const i=S.items.findIndex(x=>x.id===row.dataset.id);
+    if(b.dataset.act==="del"){S.items.splice(i,1); if(!S.items.length)S.items.push(newItem())}
+    if(b.dataset.act==="kind"){S.items[i].kind=S.items[i].kind==="drink"?"food":"drink";S.items[i]._kindSet=true}
+    renderItems(); renderPeople(); update();
+  });
+  $("#add-item").addEventListener("click",()=>{S.items.push(newItem());renderItems();const ins=$$("#item-list .item:last-child input");ins[1]&&ins[1].focus();update()});
+  $("#tax-override").addEventListener("input",e=>{S.taxOverride=e.target.value;update()});
+  $("#total-in").addEventListener("input",e=>{S.total=e.target.value;update()});
+  $("#tip-chips").innerHTML=[10,15,18,20,22,25].map(t=>`<button type="button" class="chip" data-t="${t}" aria-pressed="false">${t}%</button>`).join("");
+  $("#tip-chips").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;S.tip=+b.dataset.t;$("#tip-range").value=S.tip;update()});
+  $("#tip-range").addEventListener("input",e=>{S.tip=+e.target.value;update()});
+  $$("[data-basis]").forEach(b=>b.addEventListener("click",()=>{S.basis=b.dataset.basis;update()}));
+  $("#round-up").addEventListener("change",e=>{S.roundUp=e.target.checked;update()});
+  $$("[data-split]").forEach(b=>b.addEventListener("click",()=>{S.split=b.dataset.split;renderPeople();update()}));
+  $("#cnt-dn").addEventListener("click",()=>{S.count=Math.max(2,S.count-1);update()});
+  $("#cnt-up").addEventListener("click",()=>{S.count=Math.min(30,S.count+1);update()});
+  const addPerson=()=>{const v=$("#person-in").value.trim();if(!v)return;S.people.push({id:uid(),name:v});$("#person-in").value="";renderPeople();update();$("#person-in").focus()};
+  $("#add-person").addEventListener("click",addPerson);
+  $("#person-in").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addPerson()}});
+  $("#people").addEventListener("click",e=>{const b=e.target.closest("[data-pid]");if(!b)return;
+    if(S.people.length<=1){toast("Keep at least one person on the check.");return}
+    S.people=S.people.filter(p=>p.id!==b.dataset.pid);S.items.forEach(it=>it.who=it.who.filter(x=>x!==b.dataset.pid));renderPeople();update()});
+  $("#assign").addEventListener("click",e=>{const b=e.target.closest("[data-pid]");if(!b)return;
+    const it=S.items.find(i=>i.id===b.closest(".assign-row").dataset.id); const pid=b.dataset.pid;
+    it.who=it.who.includes(pid)?it.who.filter(x=>x!==pid):[...it.who,pid]; b.setAttribute("aria-pressed",it.who.includes(pid)); update()});
+  $("#stars").addEventListener("click",e=>{const b=e.target.closest("[data-star]");if(!b)return;const n=+b.dataset.star;S.rating=S.rating===n?0:n;renderStars($("#stars"),S.rating)});
+  $("#comment").addEventListener("input",e=>{S.comment=e.target.value});
+  $("#add-dish").addEventListener("click",()=>{S.dishes.push({id:uid(),name:"",rating:0,note:""});renderDishes();const i=$$("#dishes .dish:last-child input")[0];i&&i.focus()});
+  $("#dish-from-items").addEventListener("click",()=>{
+    const have=new Set(S.dishes.map(d=>d.name.trim().toLowerCase()));
+    let n=0; S.items.forEach(it=>{const nm=(it.name||"").trim(); if(nm&&!have.has(nm.toLowerCase())){S.dishes.push({id:uid(),name:nm,rating:0,note:"",fromItems:true});have.add(nm.toLowerCase());n++}});
+    renderDishes(); toast(n?`Added ${n} dish${n>1?"es":""}.`:"No new item names to add.");
+  });
+  $("#dishes").addEventListener("input",e=>{const box=e.target.closest(".dish");if(!box)return;const d=S.dishes.find(x=>x.id===box.dataset.id);d[e.target.dataset.f]=e.target.value});
+  $("#dishes").addEventListener("click",e=>{
+    const box=e.target.closest(".dish"); if(!box)return; const d=S.dishes.find(x=>x.id===box.dataset.id);
+    const s=e.target.closest("[data-star]"); if(s){const n=+s.dataset.star;d.rating=d.rating===n?0:n;renderStars(box.querySelector("[data-dstars]"),d.rating);return}
+    if(e.target.closest("[data-act=del]")){S.dishes=S.dishes.filter(x=>x!==d);renderDishes()}
+  });
+  $("#reset").addEventListener("click",()=>{if(isDirty()&&!confirm("Clear this check and start over?"))return;S=fresh();syncForm();clearOcr();window.scrollTo({top:0})});
+  $("#save").addEventListener("click",saveVisit);
+}
+function isDirty(){return !!(S.name||S.total||S.comment||S.items.some(i=>i.name||i.price)||S.dishes.length)}
+
+function saveVisit(){
+  S.name=$("#r-name").value.trim();
+  const c=compute();
+  if(!S.name){toast("Add the restaurant name first.");$("#r-name").focus();return}
+  if(!(c.bill>0)){toast("Enter items or a total before saving.");return}
+  const v={id:S.id||uid(),savedAt:new Date().toISOString(),name:S.name,loc:S.loc,custom:S.custom,date:S.date,mode:S.mode,
+    items:S.items.filter(i=>i.name||i.price).map(({_kindSet,...i})=>i),taxOverride:S.taxOverride,total:S.total,tip:S.tip,basis:S.basis,roundUp:S.roundUp,
+    split:S.split,count:S.count,people:S.people,rating:S.rating,comment:S.comment.trim(),
+    dishes:S.dishes.filter(d=>d.note.trim()||d.rating||(d.name.trim()&&!d.fromItems)).map(({fromItems,...d})=>d),phone:S.phone,address:S.address,
+    calc:{food:c.food,drink:c.drink,pre:c.pre,tax:c.tax,bill:c.bill,tip:c.tip,grand:c.grand,rate:c.rate,shares:c.shares}};
+  const i=db.visits.findIndex(x=>x.id===v.id);
+  if(i>=0)db.visits[i]=v; else db.visits.unshift(v);
+  db.visits.sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.savedAt||"").localeCompare(a.savedAt||""));
+  const k=v.name.toLowerCase(); db.places[k]=Object.assign(db.places[k]||{}, {name:v.name,loc:v.loc,custom:v.custom},v.phone?{phone:v.phone}:{},v.address?{address:v.address}:{});
+  if(persist()){toast(i>=0?"Visit updated.":"Visit saved."); S=fresh(); syncForm(); clearOcr(); renderRestList(); window.scrollTo({top:0})}
+}
+
+/* ---------- OCR ---------- */
+let ocrWorker=null, ocrLoading=null;
+function clearOcr(){$("#ocr").classList.remove("on");$("#ocr-raw").hidden=true;$("#ocr-bar").style.width="0";$("#ocr-msg").textContent="";$("#ocr-msg").classList.remove("bad")}
+function ocrStatus(msg,pct,bad){$("#ocr").classList.add("on");$("#ocr-msg").textContent=msg;$("#ocr-msg").classList.toggle("bad",!!bad);if(pct!=null)$("#ocr-bar").style.width=Math.round(pct*100)+"%"}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("script"));document.head.appendChild(s)})}
+async function getWorker(){
+  if(ocrWorker) return ocrWorker;
+  if(ocrLoading) return ocrLoading;
+  const C=window.TT_OCR||{};
+  ocrLoading=(async()=>{
+    if(!window.Tesseract) await loadScript(C.script);
+    const opts={logger:m=>{
+      if(m.status==="recognizing text") ocrStatus("Reading the receipt…",0.35+m.progress*0.65);
+      else if(/load|initializ/.test(m.status)) ocrStatus("Getting the reader ready (first use takes a moment)…",Math.min(.34,(m.progress||0)*.34));
+    }};
+    if(C.workerPath)opts.workerPath=C.workerPath; if(C.corePath)opts.corePath=C.corePath; if(C.langPath)opts.langPath=C.langPath;
+    if(C.workerBlobURL!==undefined)opts.workerBlobURL=C.workerBlobURL;
+    opts.gzip=true;
+    const w=await Promise.race([Tesseract.createWorker("eng",1,opts),new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),60000))]);
+    await w.setParameters({tessedit_pageseg_mode:"4",preserve_interword_spaces:"1"});
+    ocrWorker=w; return w;
+  })();
+  try{return await ocrLoading}catch(e){ocrLoading=null;throw e}
+}
+function prepImage(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      const max=2200, sc=Math.min(1,max/Math.max(img.width,img.height));
+      const w=Math.round(img.width*sc),h=Math.round(img.height*sc);
+      const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d");
+      cx.drawImage(img,0,0,w,h);
+      const d=cx.getImageData(0,0,w,h),p=d.data;let lo=255,hi=0;const g=new Uint8ClampedArray(w*h);
+      for(let i=0,j=0;i<p.length;i+=4,j++){const v=(p[i]*.299+p[i+1]*.587+p[i+2]*.114)|0;g[j]=v;if(v<lo)lo=v;if(v>hi)hi=v}
+      const span=Math.max(1,hi-lo);
+      for(let i=0,j=0;i<p.length;i+=4,j++){let v=(g[j]-lo)*255/span;v=v<128?v*.85:Math.min(255,v*1.08);p[i]=p[i+1]=p[i+2]=v}
+      cx.putImageData(d,0,0);URL.revokeObjectURL(url);res(cv);
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("image"))};
+    img.src=url;
+  });
+}
+async function runOcr(file){
+  if(!file)return;
+  ocrStatus("Preparing the photo…",0.02);
+  let canvas;
+  try{canvas=await prepImage(file)}catch(e){ocrStatus("This photo format can't be opened here. Try a screenshot of it, or enter the numbers below.",0,true);return}
+  let w;
+  try{w=await getWorker()}catch(e){
+    ocrStatus(window.TT_OCR&&window.TT_OCR.unavailableMsg||"The receipt reader couldn't start. Enter the numbers below instead.",0,true);return}
+  try{
+    const r=await w.recognize(canvas);
+    const text=r.data.text||"";
+    $("#ocr-text").textContent=text; $("#ocr-raw").hidden=!text.trim();
+    applyParsed(parseReceipt(text));
+  }catch(e){ocrStatus("Couldn't read that photo. Try again with the receipt flat and in good light, or enter the numbers below.",0,true)}
+}
+
+/* Receipt parser */
+function parseReceipt(text){
+  const lines=text.split(/\r?\n/).map(l=>l.replace(/\s+/g," ").trim()).filter(Boolean);
+  const moneyRe=/(-)?\$?\s?(\d{1,4}(?:,\d{3})*[.,]\d{2})(?!\d)/g;
+  const amt=l=>{let m,last=null;moneyRe.lastIndex=0;while((m=moneyRe.exec(l)))last=m;if(!last)return null;
+    const v=parseFloat(last[2].replace(/,(?=\d{3})/g,"").replace(",","."));return {v:last[1]?-v:v,idx:last.index}};
+  const out={items:[],subtotal:null,tax:null,tip:null,amount:null,totals:[],payment:null,name:"",phone:"",address:"",date:"",loc:null};
+  let closed=false, tipLine=-1;
+  const addrIdx=lines.findIndex(l=>/^\d{2,6}\s+[A-Za-z]/.test(l)&&!/\$|\d[.,]\d{2}\b/.test(l));
+  lines.forEach((l,i)=>{
+    const low=l.toLowerCase(); const a=amt(l);
+    if(!out.phone){const m=l.match(/\(?(\d{3})\)?[\s.-]*(\d{3})[\s.-]+(\d{4})\b/);if(m&&!/card|#x|xxxx/i.test(l))out.phone=`${m[1]}-${m[2]}-${m[3]}`}
+    if(!out.date){const m=l.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/);if(m){let y=+m[3];if(y<100)y+=2000;const mo=+m[1],d=+m[2];if(mo>=1&&mo<=12&&d>=1&&d<=31)out.date=`${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`}}
+    if(!out.loc){if(/\bsalem\b|24153/i.test(l))out.loc="salem";else if(/roanoke county|cave spring|vinton|hollins/i.test(l))out.loc="roanoke_county";else if(/\broanoke\b/i.test(l))out.loc="roanoke_city"}
+    if(!a)return;
+    if(/sub\s*-?\s*tota?l|food\s*total|net\s*sales/.test(low)){out.subtotal=a.v;closed=true;return}
+    if(/\btax\b|meals\s*tx|\btx\b/.test(low)){out.tax=(out.tax||0)+a.v;closed=true;return}
+    if(/\btip\b|gratuity|\bgrat\b/.test(low)){out.tip=a.v;tipLine=i;closed=true;return}
+    if(/change|tender|cash back/.test(low))return;
+    if(/visa|master\s*card|mastercard|amex|american express|discover|debit|credit/.test(low)){if(out.payment==null)out.payment=a.v;closed=true;return}
+    if(/^\W*amount\b/.test(low)){out.amount=a.v;closed=true;return}
+    if(/total|amount\s*due|balance|due\b/.test(low)){out.totals.push({v:a.v,i});closed=true;return}
+    if(closed||/approval|auth|acct|card|order|table|guest|server|payment|transaction|check #|chk/i.test(low))return;
+    let name=l.slice(0,a.idx).replace(/[@$.:_-]+\s*$/,"").trim(); let qty=1;
+    const q=name.match(/^(\d{1,2})\s*[xX@]?\s+(.*)$/); if(q){qty=+q[1];name=q[2]}
+    if(!/[a-z]{2}/i.test(name))return;
+    const disc=/discount|coupon|promo|comp\b/i.test(name);
+    const price=qty>1?r2(a.v/qty):a.v;
+    out.items.push({name:name.replace(/\s{2,}/g," "),qty,price:disc?-Math.abs(price):price});
+  });
+  const skip=/thank|welcome|guest copy|customer copy|receipt|^sale$|www\.|\.com/i;
+  if(addrIdx>0){for(let j=addrIdx-1;j>=0;j--){if(/[a-z]{3}/i.test(lines[j])&&!skip.test(lines[j])){out.name=lines[j];break}}out.address=lines[addrIdx]}
+  if(!out.name){const f=lines.find(l=>/[a-z]{3}/i.test(l)&&!skip.test(l)&&!/\d{3}/.test(l));out.name=f||""}
+  out.name=out.name.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9')!]+$/g,"");
+  // Pick the bill total (with tax, before tip)
+  let bill=null;
+  if(out.amount!=null)bill=out.amount;
+  else if(out.totals.length){
+    const beforeTip=out.totals.filter(t=>tipLine<0||t.i<tipLine);
+    if(beforeTip.length)bill=beforeTip[0].v; else if(out.tip!=null)bill=r2(out.totals[0].v-out.tip); else bill=out.totals[0].v;
+  }else if(out.payment!=null)bill=out.payment;
+  out.bill=bill;
+  return out;
+}
+function locFromRate(sub,tax){
+  if(!(sub>0&&tax>0))return null; const r=tax/sub*100; let best=null,bd=99;
+  ["roanoke_city","salem","roanoke_county"].forEach(l=>{const d=Math.abs(combinedRate(l)-r);if(d<bd){bd=d;best=l}});
+  return bd<=0.2?best:null;
+}
+function nameSim(a,b){a=a.toLowerCase().replace(/[^a-z0-9]/g,"");b=b.toLowerCase().replace(/[^a-z0-9]/g,"");if(!a||!b)return 0;
+  const m=[...Array(a.length+1)].map((_,i)=>[i]);for(let j=1;j<=b.length;j++)m[0][j]=j;
+  for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return 1-m[a.length][b.length]/Math.max(a.length,b.length)}
+function applyParsed(p){
+  // Match a saved restaurant by phone or similar name
+  const places=Object.values(db.places);
+  let known=p.phone&&places.find(x=>x.phone===p.phone);
+  if(!known&&p.name){let best=null,bs=0;places.forEach(x=>{const s=nameSim(x.name,p.name);if(s>bs){bs=s;best=x}});if(bs>=.6)known=best}
+  const itemSum0=r2(p.items.reduce((s,i)=>s+i.price*i.qty,0));
+  const rateLoc=locFromRate(p.subtotal!=null?p.subtotal:itemSum0,p.tax);
+  if(known){S.name=known.name;S.loc=known.loc||S.loc;S.custom=known.custom||""}
+  else{if(p.name)S.name=p.name; if(rateLoc)S.loc=rateLoc; else if(p.loc)S.loc=p.loc}
+  if(p.phone)S.phone=p.phone; if(p.address)S.address=p.address;
+  if(p.date)S.date=p.date;
+  const itemSum=r2(p.items.reduce((s,i)=>s+i.price*i.qty,0));
+  const target=p.subtotal!=null?p.subtotal:(p.bill!=null&&p.tax!=null?r2(p.bill-p.tax):null);
+  let summary;
+  if(p.items.length&&(target==null||Math.abs(itemSum-target)<=Math.max(1,target*.05))){
+    S.mode="items";S.items=p.items.map(i=>newItem({name:i.name,qty:i.qty,price:i.price.toFixed(2),kind:DRINK_RE.test(i.name)?"drink":"food"}));
+    S.taxOverride=p.tax!=null?p.tax.toFixed(2):"";
+    summary=`Read ${p.items.length} item${p.items.length>1?"s":""} totaling ${$m(itemSum)}${p.tax!=null?` and ${$m(p.tax)} tax`:""}.`;
+    if(target!=null&&Math.abs(itemSum-target)>0.01)summary+=` Receipt subtotal is ${$m(target)}; check for a missed line.`;
+  }else if(p.subtotal!=null){
+    S.mode="items";S.items=[newItem({name:"Food & drink (from receipt)",price:p.subtotal.toFixed(2)})];
+    S.taxOverride=p.tax!=null?p.tax.toFixed(2):"";
+    summary=`Read a subtotal of ${$m(p.subtotal)}${p.tax!=null?` and ${$m(p.tax)} tax`:""}. Split the line into items if you want to split by item.`;
+  }else if(p.bill!=null){
+    S.mode="total";S.total=p.bill.toFixed(2);
+    summary=p.tipAmbiguous
+      ?`Read a total of ${$m(p.bill)}. The slip also shows a ${$m(p.tip)} tip; if ${$m(p.bill)} already includes it, change the total to ${$m(r2(p.bill-p.tip))}.`
+      :`Read a total of ${$m(p.bill)}${p.tip?` (a ${$m(p.tip)} tip on the slip was left out)`:""}. Food and drink are worked out from the tax rate.`;
+  }else{
+    summary="Couldn't find any prices. Enter them below, or open the text read from the photo to copy from it.";
+  }
+  if(S.mode==="total"&&S.split==="items")S.split="even";
+  if(p.source==="shortcut")summary="From your shortcut: "+summary.charAt(0).toLowerCase()+summary.slice(1);
+  summary+=known?` Matched ${known.name} from your history.`:rateLoc?` The tax rate matches ${(LOCS.find(l=>l.id===rateLoc)||{}).label}.`+(p.name?" Check the restaurant name.":" Add the restaurant name."):(p.name?" Check the restaurant name and location.":" Add the restaurant name.");
+  ocrStatus(summary,1,!(p.items.length||p.subtotal!=null||p.bill!=null));
+  syncForm();
+}
+/* Import from the Read Receipt shortcut (Apple Intelligence "Use Model") */
+function numOf(v){if(v==null||v==="")return null;const n=parseFloat(String(v).replace(/[^0-9.\-]/g,""));return isFinite(n)?n:null}
+function fromModel(o){
+  const items=(Array.isArray(o.items)?o.items:[]).map(i=>({name:String(i.name??i.item??i.description??"").trim(),
+    qty:Math.max(1,Math.round(numOf(i.qty??i.quantity)||1)),price:numOf(i.price??i.unit_price??i.amount)}))
+    .filter(i=>i.name&&i.price!=null);
+  const where=[o.city,o.address,o.zip,o.state].filter(Boolean).join(" ").toLowerCase();
+  let loc=null; if(/salem|24153/.test(where))loc="salem"; else if(/roanoke county|cave spring/.test(where))loc="roanoke_county"; else if(/roanoke/.test(where))loc="roanoke_city";
+  let date=""; const ds=String(o.date||"").trim(); let m;
+  if((m=ds.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))date=`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+  else if((m=ds.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))){let y=+m[3];if(y<100)y+=2000;date=`${y}-${m[1].padStart(2,"0")}-${m[2].padStart(2,"0")}`}
+  const ph=String(o.phone||"").replace(/\D/g,"").slice(-10);
+  const subtotal=numOf(o.subtotal), tax=numOf(o.tax), tip=numOf(o.tip); let bill=numOf(o.total);
+  if(bill!=null&&tip&&subtotal!=null&&tax!=null&&Math.abs(bill-(subtotal+tax+tip))<0.03)bill=r2(bill-tip);
+  if(bill==null&&subtotal!=null)bill=r2(subtotal+(tax||0));
+  return {name:String(o.restaurant??o.name??"").trim(),address:String(o.address||""),phone:ph.length===10?`${ph.slice(0,3)}-${ph.slice(3,6)}-${ph.slice(6)}`:"",
+    date,loc,items,subtotal,tax,tip,bill,totals:[],source:"shortcut",tipAmbiguous:!items.length&&subtotal==null&&tip>0&&bill>tip};
+}
+function importText(txt){
+  txt=String(txt||"").trim();
+  const a=txt.indexOf("{"), b=txt.lastIndexOf("}");
+  if(a>=0&&b>a){try{const o=JSON.parse(txt.slice(a,b+1));clearOcr();$("#ocr-text").textContent=txt;$("#ocr-raw").hidden=false;applyParsed(fromModel(o));window.scrollTo({top:0});return true}catch(e){}}
+  if(/\d[.,]\d{2}/.test(txt)){clearOcr();$("#ocr-text").textContent=txt;$("#ocr-raw").hidden=false;applyParsed(parseReceipt(txt));window.scrollTo({top:0});return true}
+  ocrStatus("That doesn't look like receipt data. Run the Read Receipt shortcut again, then paste.",0,true);return false;
+}
+function pasteDialog(){
+  $("#dlg-body").innerHTML=`<h2>Paste receipt</h2><p class="hint" style="margin-top:0">Touch and hold in the box, choose Paste, then tap Import.</p>
+    <textarea class="t" id="paste-box" style="min-height:160px;font-family:var(--mono);font-size:.85rem" aria-label="Receipt data"></textarea>
+    <div class="actions"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" id="paste-go">Import</button></div>`;
+  $("#dlg").showModal();
+  $("#paste-go").addEventListener("click",()=>{const t=$("#paste-box").value;if(!t.trim()){toast("Paste the receipt data first.");return}$("#dlg").close();importText(t)});
+}
+async function pasteImport(){
+  if(isDirty()&&!confirm("Replace the check you're working on with the pasted receipt?"))return;
+  try{const t=navigator.clipboard&&await navigator.clipboard.readText(); if(!t||!t.trim())throw 0; importText(t)}catch(e){pasteDialog()}
+}
+function importFromHash(){
+  const m=location.hash.match(/^#r=(.+)$/); if(!m)return;
+  let t=m[1]; try{t=decodeURIComponent(t)}catch(e){}
+  try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+  importText(t);
+}
+function bindOcr(){
+  ["#cam","#pick"].forEach(id=>$(id).addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];e.target.value="";runOcr(f)}));
+  $("#paste").addEventListener("click",pasteImport);
+  window.addEventListener("hashchange",importFromHash);
+}
+
+/* ---------- History ---------- */
+let hv="visits";
+function stars(n){return n?"★".repeat(n)+"☆".repeat(5-n):"Not rated"}
+function renderHistory(){
+  const q=$("#search").value.trim().toLowerCase();
+  const vs=db.visits.filter(v=>!q||[v.name,v.comment,...(v.dishes||[]).map(d=>d.name+" "+d.note),...(v.items||[]).map(i=>i.name)].join(" ").toLowerCase().includes(q));
+  const spent=db.visits.reduce((s,v)=>s+(v.calc?.grand||0),0), tips=db.visits.reduce((s,v)=>s+(v.calc?.tip||0),0);
+  const placeCount=new Set(db.visits.map(v=>v.name.toLowerCase())).size;
+  $("#stats").innerHTML=`<div class="stat"><b>${db.visits.length}</b><span>visits</span></div><div class="stat"><b>${placeCount}</b><span>restaurants</span></div><div class="stat"><b>${$m(spent).replace(/\.\d\d$/,"")}</b><span>spent, ${$m(tips).replace(/\.\d\d$/,"")} in tips</span></div>`;
+  $$("[data-hv]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.hv===hv));
+  const el=$("#hist");
+  if(!db.visits.length){el.innerHTML=`<div class="empty-state"><p>No visits yet. Your saved checks, ratings, and dish notes will show up here.</p><button type="button" class="btn primary" data-go="new">Start a new check</button></div>`;return}
+  if(!vs.length){el.innerHTML=`<div class="empty-state"><p>Nothing matches “${esc(q)}”.</p></div>`;return}
+  if(hv==="visits"){
+    el.innerHTML=vs.map(v=>`<button type="button" class="entry" data-vid="${v.id}">
+      <span class="l1"><span class="n">${esc(v.name)}</span><span>${$m(v.calc?.grand)}</span></span>
+      <span class="l2"><span>${fmtDate(v.date)}, ${esc(locShort(v.loc))}</span><span class="st" aria-label="${v.rating||0} stars">${v.rating?stars(v.rating):""}</span></span></button>`).join("");
+  }else{
+    const g={};vs.forEach(v=>{const k=v.name.toLowerCase();(g[k]=g[k]||{name:v.name,loc:v.loc,vs:[]}).vs.push(v)});
+    const arr=Object.values(g).map(p=>{const rated=p.vs.filter(v=>v.rating);return Object.assign(p,{avg:rated.length?rated.reduce((s,v)=>s+v.rating,0)/rated.length:0,spent:p.vs.reduce((s,v)=>s+(v.calc?.grand||0),0),last:p.vs[0].date})}).sort((a,b)=>b.avg-a.avg||b.vs.length-a.vs.length);
+    el.innerHTML=arr.map(p=>`<button type="button" class="entry" data-place="${esc(p.name)}">
+      <span class="l1"><span class="n">${esc(p.name)}</span><span class="st">${p.avg?"★ "+p.avg.toFixed(1):""}</span></span>
+      <span class="l2"><span>${p.vs.length} visit${p.vs.length>1?"s":""}, last ${fmtDate(p.last)}</span><span>${$m(p.spent)} total</span></span></button>`).join("");
+  }
+}
+function fmtDate(d){return d?new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):""}
+function locShort(l){return {roanoke_city:"Roanoke",salem:"Salem",roanoke_county:"Roanoke Co.",other:"Elsewhere"}[l]||""}
+function openVisit(id){
+  const v=db.visits.find(x=>x.id===id); if(!v)return;
+  const c=v.calc||{};
+  let h=`<div class="slip-wrap" style="margin-top:0"><div class="slip">${slipHTML(v,Object.assign({shares:c.shares||[],taxSource:v.taxOverride!==""&&v.mode==="items"?"receipt":"rate"},c))}</div></div>`;
+  h+=`<p class="st" style="font-size:1.3rem;margin:4px 0">${v.rating?stars(v.rating):'<span class="hint">Not rated</span>'}</p>`;
+  if(v.comment)h+=`<div class="note">${esc(v.comment).replace(/\n/g,"<br>")}</div>`;
+  (v.dishes||[]).forEach(d=>{h+=`<div class="note"><b>${esc(d.name)}</b> ${d.rating?`<span class="st">${stars(d.rating)}</span>`:""}${d.note?`<br>${esc(d.note).replace(/\n/g,"<br>")}`:""}</div>`});
+  h+=`<div class="actions"><button type="button" class="btn danger" data-del="${v.id}">Delete</button><button type="button" class="btn" data-close>Close</button><button type="button" class="btn primary" data-edit="${v.id}">Edit</button></div>`;
+  $("#dlg-body").innerHTML=h; $("#dlg").showModal();
+}
+function openPlace(name){
+  const vs=db.visits.filter(v=>v.name.toLowerCase()===name.toLowerCase());
+  const rated=vs.filter(v=>v.rating), avg=rated.length?rated.reduce((s,v)=>s+v.rating,0)/rated.length:0;
+  const dishes=vs.flatMap(v=>(v.dishes||[]).map(d=>Object.assign({date:v.date},d)));
+  let h=`<h2>${esc(vs[0].name)}</h2><p class="hint" style="margin-top:0">${esc((LOCS.find(l=>l.id===vs[0].loc)||{}).label||"")}${avg?`, average <span class="st">★ ${avg.toFixed(1)}</span>`:""}, ${vs.length} visit${vs.length>1?"s":""}, ${$m(vs.reduce((s,v)=>s+(v.calc?.grand||0),0))} spent</p>`;
+  if(dishes.length){h+=`<h3 style="font-family:var(--serif);font-weight:400;margin:14px 0 0">Dishes</h3>`;dishes.forEach(d=>{h+=`<div class="note"><b>${esc(d.name)}</b> ${d.rating?`<span class="st">${stars(d.rating)}</span>`:""}<span class="hint"> ${fmtDate(d.date)}</span>${d.note?`<br>${esc(d.note)}`:""}</div>`})}
+  h+=`<h3 style="font-family:var(--serif);font-weight:400;margin:14px 0 6px">Visits</h3>`+vs.map(v=>`<button type="button" class="entry" data-vid="${v.id}"><span class="l1"><span>${fmtDate(v.date)}</span><span>${$m(v.calc?.grand)}</span></span>${v.comment?`<span class="l2"><span>${esc(v.comment.slice(0,90))}${v.comment.length>90?"…":""}</span></span>`:""}</button>`).join("");
+  h+=`<div class="actions"><button type="button" class="btn" data-close>Close</button></div>`;
+  $("#dlg-body").innerHTML=h; $("#dlg").showModal();
+}
+function bindHistory(){
+  $("#search").addEventListener("input",renderHistory);
+  $$("[data-hv]").forEach(b=>b.addEventListener("click",()=>{hv=b.dataset.hv;renderHistory()}));
+  document.addEventListener("click",e=>{
+    const t=e.target;
+    const vid=t.closest("[data-vid]"); if(vid){if($("#dlg").open)$("#dlg").close();openVisit(vid.dataset.vid);return}
+    const pl=t.closest("[data-place]"); if(pl){openPlace(pl.dataset.place);return}
+    if(t.closest("[data-close]")){$("#dlg").close();return}
+    const go=t.closest("[data-go]"); if(go){show(go.dataset.go);return}
+    const del=t.closest("[data-del]"); if(del){if(!confirm("Delete this visit? This can't be undone."))return;db.visits=db.visits.filter(v=>v.id!==del.dataset.del);persist();$("#dlg").close();renderHistory();renderRestList();toast("Visit deleted.");return}
+    const ed=t.closest("[data-edit]"); if(ed){const v=db.visits.find(x=>x.id===ed.dataset.edit);
+      if(isDirty()&&!confirm("Replace the check you're working on with this visit?"))return;
+      S=Object.assign(fresh(),JSON.parse(JSON.stringify(v)));delete S.calc;delete S.savedAt;if(!S.items.length)S.items=[newItem()];
+      $("#dlg").close();clearOcr();syncForm();show("new");window.scrollTo({top:0});toast("Editing saved visit. Save to keep changes.")}
+  });
+  $("#dlg").addEventListener("click",e=>{if(e.target===$("#dlg"))$("#dlg").close()});
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  const s=db.settings;
+  $("#rates").innerHTML=`<tr><td>Virginia sales tax</td><td><input class="t money" type="number" step="0.01" data-rate="state" value="${s.state}" aria-label="Virginia sales tax percent"></td><td class="c"></td></tr>`+
+    LOCS.filter(l=>l.id!=="other").map(l=>`<tr><td>${l.label} meals tax</td><td><input class="t money" type="number" step="0.01" data-rate="${l.id}" value="${s.local[l.id]}" aria-label="${l.label} meals tax percent"></td><td class="c">${combinedRate(l.id).toFixed(1)}%</td></tr>`).join("");
+  $("#def-tip").innerHTML=Array.from({length:16},(_,i)=>i+10).map(t=>`<option value="${t}" ${t===s.defTip?"selected":""}>${t}%</option>`).join("");
+  $("#def-basis").value=s.defBasis; $("#me-name").value=s.me; $("#theme").value=s.theme||"";
+}
+function applyTheme(){const t=db.settings.theme;if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
+function download(name,data,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function csv(){
+  const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};
+  const head=["Date","Restaurant","Location","Food","Drinks","Food & drink","Tax","Total with tax","Tip %","Tip basis","Tip","Grand total","Split","People","Rating","Comments","Dishes"];
+  const rows=db.visits.map(v=>{const c=v.calc||{};return [v.date,v.name,(LOCS.find(l=>l.id===v.loc)||{}).label,c.food?.toFixed(2),c.drink?.toFixed(2),c.pre?.toFixed(2),c.tax?.toFixed(2),c.bill?.toFixed(2),v.tip,v.basis==="post"?"Total with tax":"Food & drink",c.tip?.toFixed(2),c.grand?.toFixed(2),
+    v.split==="full"?"One check":v.split==="even"?`Even (${v.count})`:"By item",(c.shares||[]).length>1?(c.shares||[]).map(s=>`${s.name} ${s.amount.toFixed(2)}`).join("; "):"",v.rating||"",v.comment,(v.dishes||[]).map(d=>`${d.name}${d.rating?` (${d.rating}/5)`:""}${d.note?`: ${d.note}`:""}`).join(" | ")].map(q).join(",")});
+  return [head.join(","),...rows].join("\n");
+}
+function bindSettings(){
+  $("#rates").addEventListener("input",e=>{const k=e.target.dataset.rate;if(!k)return;const v=parseFloat(e.target.value);if(!isFinite(v)||v<0)return;
+    if(k==="state")db.settings.state=v;else db.settings.local[k]=v;persist();renderLocSelect();$("#r-loc").value=S.loc;
+    $$("#rates tr").forEach((tr,i)=>{if(i>0){const id=LOCS[i-1].id;tr.querySelector(".c").textContent=combinedRate(id).toFixed(1)+"%"}});update()});
+  $("#def-tip").addEventListener("change",e=>{db.settings.defTip=+e.target.value;persist()});
+  $("#def-basis").addEventListener("change",e=>{db.settings.defBasis=e.target.value;persist()});
+  $("#me-name").addEventListener("change",e=>{db.settings.me=e.target.value.trim();persist()});
+  $("#theme").addEventListener("change",e=>{db.settings.theme=e.target.value;persist();applyTheme()});
+  $("#export-csv").addEventListener("click",()=>{if(!db.visits.length){toast("No visits to export yet.");return}download(`tab-and-tally-${today()}.csv`,csv(),"text/csv");toast("Exported CSV.")});
+  $("#export-json").addEventListener("click",()=>{download(`tab-and-tally-backup-${today()}.json`,JSON.stringify(db,null,1),"application/json");toast("Saved backup.")});
+  $("#import-json").addEventListener("change",e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.visits))throw 0;
+    if(!confirm(`Restore ${d.visits.length} visits? This replaces what's on this device.`))return;db=d;
+    db.settings=Object.assign({},DEFAULTS.settings,d.settings||{});db.settings.local=Object.assign({},DEFAULTS.settings.local,(d.settings||{}).local||{});db.places=d.places||{};
+    persist();renderSettings();renderLocSelect();renderRestList();renderHistory();applyTheme();toast("Backup restored.")}catch(err){toast("That file isn't a Tab & Tally backup.")}};r.readAsText(f)});
+  $("#wipe").addEventListener("click",()=>{if(!db.visits.length){toast("There are no visits to delete.");return}if(!confirm(`Delete all ${db.visits.length} visits? Export a backup first if you might want them.`))return;db.visits=[];db.places={};persist();renderHistory();renderRestList();toast("All visits deleted.")});
+}
+
+/* ---------- Shell ---------- */
+function show(v){$$(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));$$("nav.tabs button").forEach(b=>b.dataset.view===v?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  if(v==="history")renderHistory(); if(v==="settings")renderSettings(); window.scrollTo({top:0})}
+function renderRestList(){$("#rest-list").innerHTML=Object.values(db.places).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.name)}">`).join("")}
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2800)}
+
+load(); applyTheme(); S=fresh();
+renderLocSelect(); renderRestList(); bindNew(); bindOcr(); bindHistory(); bindSettings();
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+syncForm();
+importFromHash();
+window.__TT={parseReceipt,importText,fromModel,compute:()=>compute(),get S(){return S},set S(v){S=v}};
+if(window.TT_PWA&&"serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+})();
+</script>
+</body>
+</html>

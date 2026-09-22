@@ -1,0 +1,28 @@
+{
+ "name": "Tab & Tally",
+ "short_name": "Tab & Tally",
+ "description": "Restaurant check calculator, splitter, and dining journal.",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#F3EADB",
+ "theme_color": "#7B1E34",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
