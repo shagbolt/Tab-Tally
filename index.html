@@ -42,6 +42,7 @@
   --brass:#D8AC5A; --good:#8FC39B; --warn:#E8A06A; --slip:#F7F1E4; --slip-ink:#2A2226;
 }
 *,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
 html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans);min-height:100%}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -159,7 +160,7 @@ input[type=range]{width:100%;margin:14px 0 6px;accent-color:var(--wine);height:3
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
 nav.tabs .in{display:flex;max-width:600px;width:100%}
-nav.tabs button{flex:1;border:0;background:transparent;padding:10px 4px 12px;min-height:56px;font-weight:600;font-size:.8rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button{flex:1;border:0;background:transparent;padding:10px 2px 12px;min-height:56px;font-weight:600;font-size:.75rem;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav.tabs button svg{width:22px;height:22px}
 nav.tabs button[aria-current="page"]{color:var(--wine)}
 
@@ -191,6 +192,39 @@ dialog .dlg h2{font-family:var(--serif);font-weight:400;margin:0 0 4px}
 .rates input{width:80px;text-align:right}
 .rates td.c{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 
+/* Reports */
+.period{display:flex;align-items:center;gap:8px;margin-top:12px}
+.period button.nav{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.2rem;cursor:pointer;flex:0 0 auto}
+.period .lab{flex:1;text-align:center;font-family:var(--serif);font-size:1.2rem}
+.period .lab small{display:block;font-family:var(--sans);font-size:.78rem;color:var(--muted)}
+.custom-range{display:flex;gap:10px;margin-top:10px}
+.custom-range > div{flex:1}
+.big-total{text-align:center;margin:4px 0 10px}
+.big-total b{display:block;font-family:var(--serif);font-weight:400;font-size:2.4rem;line-height:1.1;color:var(--slip-ink)}
+.big-total span{font-size:.85rem;color:#7a6a6e;font-family:var(--sans)}
+.delta{font-family:var(--sans);font-size:.8rem;font-weight:600}
+.delta.up{color:#9A4A12}.delta.dn{color:#3F6B4A}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:10px 0 8px;background:#eee4d6}
+.stack i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-family:var(--sans);font-size:.78rem;color:#6d5d61;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--c);vertical-align:-1px}
+.c-food{--c:#7B1E34}.c-drink{--c:#A87B2E}.c-mixed{--c:#C98B98}.c-tax{--c:#8C7F80}.c-tip{--c:#3F6B4A}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.budget .track{height:10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin:8px 0 4px}
+.budget .track i{display:block;height:100%;background:var(--good)}
+.budget .track i.over{background:var(--warn)}
+.rank{display:grid;grid-template-columns:28px 1fr auto;gap:4px 10px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.rank:last-child{border-bottom:0}
+.rank .no{font-family:var(--serif);color:var(--muted);font-size:1.1rem}
+.rank .nm{font-weight:600}
+.rank .ct{font-weight:700;white-space:nowrap}
+.rank .meta{grid-column:2/4;font-size:.82rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.rank .freq{grid-column:2/4;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.rank .freq i{display:block;height:100%;background:var(--wine)}
+.trend svg{width:100%;height:auto;display:block}
+.trend text{font-family:var(--sans);font-size:11px;fill:var(--muted)}
+.trend .cur{fill:var(--wine)}.trend .old{fill:var(--line)}
+.trend .val{fill:var(--ink);font-weight:600}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -341,6 +375,31 @@ dialog .dlg h2{font-family:var(--serif);font-weight:400;margin:0 0 4px}
     <div class="list" id="hist"></div>
   </main>
 
+  <!-- REPORTS -->
+  <main id="v-reports" class="view" aria-label="Reports">
+    <div class="seg" role="group" aria-label="Report period">
+      <button type="button" data-rk="week" aria-pressed="false">Week</button>
+      <button type="button" data-rk="month" aria-pressed="true">Month</button>
+      <button type="button" data-rk="year" aria-pressed="false">Year</button>
+      <button type="button" data-rk="custom" aria-pressed="false">Custom</button>
+    </div>
+    <div class="period" id="rp-nav">
+      <button type="button" class="nav" id="rp-prev" aria-label="Previous period">‹</button>
+      <div class="lab" id="rp-label" aria-live="polite"></div>
+      <button type="button" class="nav" id="rp-next" aria-label="Next period">›</button>
+    </div>
+    <div class="custom-range" id="rp-custom" hidden>
+      <div><label class="f" for="rp-from">From</label><input class="t" type="date" id="rp-from"></div>
+      <div><label class="f" for="rp-to">To</label><input class="t" type="date" id="rp-to"></div>
+    </div>
+    <div class="seg" role="group" aria-label="Count" style="margin-top:12px">
+      <button type="button" data-rb="mine" aria-pressed="true">My share</button>
+      <button type="button" data-rb="table" aria-pressed="false">Whole checks</button>
+    </div>
+    <p class="hint" id="rb-hint"></p>
+    <div id="report"></div>
+  </main>
+
   <!-- SETTINGS -->
   <main id="v-settings" class="view" aria-label="Settings">
     <section class="block">
@@ -360,6 +419,14 @@ dialog .dlg h2{font-family:var(--serif);font-weight:400;margin:0 0 4px}
       <select class="t" id="theme"><option value="">Match device</option><option value="light">Light</option><option value="dark">Dark</option></select>
     </section>
     <section class="block">
+      <h2>Reports</h2>
+      <label class="f" for="week-start">Weeks start on</label>
+      <select class="t" id="week-start"><option value="0">Sunday</option><option value="1">Monday</option></select>
+      <label class="f" for="budget">Monthly dining budget (optional)</label>
+      <input class="t money" id="budget" type="number" inputmode="decimal" step="1" min="0" placeholder="No budget">
+      <p class="hint">Reports show progress against this each month, counted by the My share or Whole checks setting you pick in Reports.</p>
+    </section>
+    <section class="block">
       <h2>Your data</h2>
       <p class="hint" style="margin-top:0">Visits are stored only on this device. Export a spreadsheet, or keep a backup file to move to another device.</p>
       <div class="actions" style="flex-wrap:wrap">
@@ -377,6 +444,7 @@ dialog .dlg h2{font-family:var(--serif);font-weight:400;margin:0 0 4px}
 <nav class="tabs" aria-label="Sections"><div class="in">
   <button type="button" data-view="new" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>New check</button>
   <button type="button" data-view="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
+  <button type="button" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Reports</button>
   <button type="button" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
 </div></nav>
 
@@ -402,7 +470,7 @@ const DRINK_RE=/\b(tea|coffee|soda|coke|pepsi|sprite|dr\.? ?pepper|beer|ipa|lage
 /* ---------- Storage ---------- */
 const KEY="tabtally.v1";
 const DEFAULTS={
-  settings:{state:5.3, local:{roanoke_city:6.5,salem:6,roanoke_county:4}, defTip:20, defBasis:"pre", me:"", theme:""},
+  settings:{state:5.3, local:{roanoke_city:6.5,salem:6,roanoke_county:4}, defTip:20, defBasis:"pre", me:"", theme:"", weekStart:0, budget:0, reportBasis:"mine"},
   visits:[], places:{}
 };
 let db;
@@ -921,6 +989,133 @@ function bindHistory(){
   $("#dlg").addEventListener("click",e=>{if(e.target===$("#dlg"))$("#dlg").close()});
 }
 
+/* ---------- Reports ---------- */
+let RP={kind:"month",offset:0,from:"",to:""};
+const isoD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const noon=s=>new Date(s+"T12:00:00");
+function rangeFor(kind,offset){
+  const now=new Date(); now.setHours(12,0,0,0);
+  if(kind==="week"){
+    const st=new Date(now); st.setDate(st.getDate()-((st.getDay()-(+db.settings.weekStart||0)+7)%7)+offset*7);
+    const en=new Date(st); en.setDate(st.getDate()+6);
+    const f=d=>d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+    return {start:isoD(st),end:isoD(en),label:`${f(st)} – ${f(en)}, ${en.getFullYear()}`,sub:offset===0?"This week":offset===-1?"Last week":"",short:f(st)};
+  }
+  if(kind==="year"){const y=now.getFullYear()+offset;return {start:`${y}-01-01`,end:`${y}-12-31`,label:String(y),sub:offset===0?"This year":"",short:String(y)}}
+  if(kind==="custom"){
+    const a=RP.from||isoD(new Date(now.getFullYear(),now.getMonth(),1,12)), b=RP.to||isoD(now);
+    const [s,e]=a<=b?[a,b]:[b,a];
+    return {start:s,end:e,label:`${fmtDate(s)} – ${fmtDate(e)}`,sub:"Custom range"};
+  }
+  const st=new Date(now.getFullYear(),now.getMonth()+offset,1,12), en=new Date(st.getFullYear(),st.getMonth()+1,0,12);
+  return {start:isoD(st),end:isoD(en),label:st.toLocaleDateString("en-US",{month:"long",year:"numeric"}),sub:offset===0?"This month":offset===-1?"Last month":"",short:st.toLocaleDateString("en-US",{month:"short"})};
+}
+function shareFactor(v,basis){
+  if(basis!=="mine")return 1;
+  const c=v.calc||{}; if(!(c.grand>0))return 1;
+  if(v.split==="even")return 1/Math.max(1,v.count||1);
+  if(v.split==="items"&&Array.isArray(c.shares)&&c.shares.length)return c.shares[0].amount/c.grand;
+  return 1;
+}
+function aggregate(start,end,basis){
+  const vs=db.visits.filter(v=>v.date&&v.date>=start&&v.date<=end);
+  const A={visits:vs.length,grand:0,pre:0,food:0,drink:0,mixed:0,tax:0,tip:0,totalOnly:0,places:{},dishes:[]};
+  vs.forEach(v=>{
+    const c=v.calc||{}, f=shareFactor(v,basis);
+    A.grand+=(c.grand||0)*f; A.pre+=(c.pre||0)*f; A.tax+=(c.tax||0)*f; A.tip+=(c.tip||0)*f;
+    if(v.mode==="items"){A.food+=(c.food||0)*f;A.drink+=(c.drink||0)*f}else{A.mixed+=(c.pre||0)*f;A.totalOnly++}
+    const k=v.name.toLowerCase(); const P=A.places[k]=A.places[k]||{name:v.name,visits:0,spent:0,ratings:[],last:""};
+    P.visits++; P.spent+=(c.grand||0)*f; if(v.rating)P.ratings.push(v.rating); if(v.date>P.last)P.last=v.date;
+    (v.dishes||[]).forEach(d=>{if(d.rating>=4)A.dishes.push({name:d.name,rating:d.rating,place:v.name,note:d.note,date:v.date})});
+  });
+  ["grand","pre","food","drink","mixed","tax","tip"].forEach(k=>A[k]=r2(A[k]));
+  A.ranked=Object.values(A.places).map(p=>Object.assign(p,{avg:p.ratings.length?p.ratings.reduce((a,b)=>a+b,0)/p.ratings.length:0}))
+    .sort((a,b)=>b.visits-a.visits||b.spent-a.spent||a.name.localeCompare(b.name));
+  A.dishes.sort((a,b)=>b.rating-a.rating||(b.date||"").localeCompare(a.date||""));
+  return A;
+}
+function deltaHTML(cur,prev,label){
+  if(!(prev>0))return "";
+  const d=(cur-prev)/prev*100; if(Math.abs(d)<0.5)return `<span class="delta">About the same as ${label}</span>`;
+  return `<span class="delta ${d>0?"up":"dn"}">${d>0?"▲":"▼"} ${Math.abs(d).toFixed(0)}% vs ${label} (${$m(prev)})</span>`;
+}
+function trendSVG(kind,basis){
+  const n=6,W=340,H=150,pad=22,bw=(W-10)/n;
+  const pts=[];for(let i=n-1;i>=0;i--){const r=rangeFor(kind,RP.offset-i);pts.push({lab:kind==="week"?r.short:r.short,v:aggregate(r.start,r.end,basis).grand,cur:i===0})}
+  const mx=Math.max(1,...pts.map(p=>p.v));
+  const bars=pts.map((p,i)=>{const h=Math.round((H-pad*2)*(p.v/mx)), x=5+i*bw+bw*0.18, w=bw*0.64, y=H-pad-h;
+    return `<rect class="${p.cur?"cur":"old"}" x="${x}" y="${y}" width="${w}" height="${Math.max(h,1)}" rx="4"/>`+
+      (p.v>0?`<text class="val" x="${x+w/2}" y="${y-5}" text-anchor="middle">${p.v>=1000?"$"+(p.v/1000).toFixed(1)+"k":"$"+Math.round(p.v)}</text>`:"")+
+      `<text x="${x+w/2}" y="${H-6}" text-anchor="middle">${esc(p.lab)}</text>`}).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending over the last ${n} ${kind}s">${bars}</svg>`;
+}
+function renderReport(){
+  const basis=db.settings.reportBasis||"mine";
+  $$("[data-rk]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rk===RP.kind));
+  $$("[data-rb]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rb===basis));
+  $("#rb-hint").textContent=basis==="mine"?"Split checks count only your part: your even share, or the first person when split by item.":"Every check counts in full, including other people's shares.";
+  $("#rp-custom").hidden=RP.kind!=="custom"; $("#rp-prev").hidden=$("#rp-next").hidden=RP.kind==="custom";
+  if(RP.kind==="custom"){const r0=rangeFor("custom",0);$("#rp-from").value=r0.start;$("#rp-to").value=r0.end}
+  const r=rangeFor(RP.kind,RP.offset);
+  $("#rp-label").innerHTML=`${esc(r.label)}${r.sub?`<small>${esc(r.sub)}</small>`:""}`;
+  $("#rp-next").disabled=RP.offset>=0;
+  const A=aggregate(r.start,r.end,basis);
+  const el=$("#report");
+  if(!A.visits){el.innerHTML=`<div class="empty-state"><p>No visits ${RP.kind==="custom"?"in this range":"in "+esc(r.label)}.</p>${db.visits.length?"":`<button type="button" class="btn primary" data-go="new">Start a new check</button>`}</div>`;return}
+  let prevHTML="";
+  if(RP.kind!=="custom"){const pr=rangeFor(RP.kind,RP.offset-1);prevHTML=deltaHTML(A.grand,aggregate(pr.start,pr.end,basis).grand,RP.kind==="week"?"previous week":RP.kind==="year"?"previous year":"previous month")}
+  const seg=[["food",A.food,"Food"],["drink",A.drink,"Drinks"],["mixed",A.mixed,"Food & drink (total-only)"],["tax",A.tax,"Tax"],["tip",A.tip,"Tips"]].filter(x=>x[1]>0);
+  const tipPct=A.pre>0?A.tip/A.pre*100:0;
+  let h=`<div class="slip-wrap"><div class="slip">
+    <div class="big-total"><span>Total spent</span><b>${$m(A.grand)}</b>${prevHTML}</div>
+    <div class="stack" aria-hidden="true">${seg.map(x=>`<i class="c-${x[0]}" style="width:${(x[1]/A.grand*100).toFixed(2)}%;background:var(--c)"></i>`).join("")}</div>
+    <div class="legend">${seg.map(x=>`<span class="c-${x[0]}">${x[2]}</span>`).join("")}</div>
+    <div class="rule"></div>`;
+  if(A.food)h+=`<div class="ln"><span>Food</span><span>${$m(A.food)}</span></div>`;
+  if(A.drink)h+=`<div class="ln"><span>Drinks</span><span>${$m(A.drink)}</span></div>`;
+  if(A.mixed)h+=`<div class="ln"><span>Food &amp; drink, total-only checks</span><span>${$m(A.mixed)}</span></div>`;
+  h+=`<div class="ln"><span>Food &amp; drink subtotal</span><span>${$m(A.pre)}</span></div>
+    <div class="ln"><span>Tax</span><span>${$m(A.tax)}</span></div>
+    <div class="ln"><span>Tips (avg ${tipPct.toFixed(1)}%)</span><span>${$m(A.tip)}</span></div>
+    <div class="rule"></div><div class="ln grand"><span>Total</span><span>${$m(A.grand)}</span></div>
+    ${A.totalOnly?`<p class="dim" style="font-size:.78rem;margin:6px 0 0">${A.totalOnly} of ${A.visits} visit${A.visits>1?"s were":" was"} entered as a total only, so food and drinks can't be separated for ${A.totalOnly>1?"them":"it"}.</p>`:""}
+  </div></div>`;
+  h+=`<div class="kpis"><div class="stat"><b>${A.visits}</b><span>visit${A.visits>1?"s":""}</span></div><div class="stat"><b>${$m(A.grand/A.visits)}</b><span>avg per visit</span></div><div class="stat"><b>${A.ranked.length}</b><span>restaurant${A.ranked.length>1?"s":""}</span></div></div>`;
+  const bud=+db.settings.budget||0;
+  if(bud>0&&RP.kind==="month"){const pct=A.grand/bud*100;h+=`<section class="block budget"><h2>Budget</h2>
+    <div class="track"><i class="${pct>100?"over":""}" style="width:${Math.min(100,pct).toFixed(1)}%"></i></div>
+    <p class="hint" style="margin:0">${pct>100?`${$m(A.grand-bud)} over`:`${$m(bud-A.grand)} left`} of ${$m(bud)} (${pct.toFixed(0)}% used)</p></section>`}
+  const top=A.ranked[0].visits;
+  h+=`<section class="block"><h2>Restaurants by visits</h2>${A.ranked.map((p,i)=>`<div class="rank">
+    <span class="no">${i+1}</span><span class="nm">${esc(p.name)}</span><span class="ct">${p.visits} visit${p.visits>1?"s":""}</span>
+    <div class="freq" aria-hidden="true"><i style="width:${(p.visits/top*100).toFixed(0)}%"></i></div>
+    <div class="meta"><span>${$m(p.spent)} spent, avg ${$m(p.spent/p.visits)}</span><span class="st">${p.avg?"★ "+p.avg.toFixed(1):""}</span></div></div>`).join("")}</section>`;
+  if(RP.kind!=="custom")h+=`<section class="block trend"><h2>Last six ${RP.kind==="week"?"weeks":RP.kind==="year"?"years":"months"}</h2>${trendSVG(RP.kind,basis)}</section>`;
+  if(A.dishes.length)h+=`<section class="block"><h2>Top-rated dishes</h2>${A.dishes.slice(0,6).map(d=>`<div class="note"><b>${esc(d.name)}</b> <span class="st">${stars(d.rating)}</span><br><span class="hint">${esc(d.place)}, ${fmtDate(d.date)}</span>${d.note?`<br>${esc(d.note)}`:""}</div>`).join("")}</section>`;
+  h+=`<div class="actions"><button type="button" class="btn" id="rp-csv">Export CSV</button><button type="button" class="btn primary" id="rp-share">Share report</button></div>`;
+  el.innerHTML=h;
+  $("#rp-share").addEventListener("click",()=>shareReport(r,A,basis,tipPct));
+  $("#rp-csv").addEventListener("click",()=>download(`tab-and-tally-${r.start}-to-${r.end}.csv`,csv(v=>v.date>=r.start&&v.date<=r.end),"text/csv"));
+}
+async function shareReport(r,A,basis,tipPct){
+  const lines=[`Tab & Tally: ${r.label}`,basis==="mine"?"(my share of split checks)":"(whole checks)","",
+    `Total spent: ${$m(A.grand)} over ${A.visits} visit${A.visits>1?"s":""}`,
+    ...(A.food?[`Food: ${$m(A.food)}`]:[]),...(A.drink?[`Drinks: ${$m(A.drink)}`]:[]),...(A.mixed?[`Food & drink (total-only checks): ${$m(A.mixed)}`]:[]),
+    `Tax: ${$m(A.tax)}`,`Tips: ${$m(A.tip)} (avg ${tipPct.toFixed(1)}%)`,"","Restaurants by visits:",
+    ...A.ranked.map((p,i)=>`${i+1}. ${p.name}: ${p.visits} visit${p.visits>1?"s":""}, ${$m(p.spent)}${p.avg?`, ★${p.avg.toFixed(1)}`:""}`)];
+  const text=lines.join("\n");
+  try{if(navigator.share){await navigator.share({title:`Dining report, ${r.label}`,text});return}}catch(e){if(e&&e.name==="AbortError")return}
+  try{await navigator.clipboard.writeText(text);toast("Report copied. Paste it into Notes or a message.")}catch(e){toast("Sharing isn't available here.")}
+}
+function bindReports(){
+  $$("[data-rk]").forEach(b=>b.addEventListener("click",()=>{RP.kind=b.dataset.rk;RP.offset=0;renderReport()}));
+  $$("[data-rb]").forEach(b=>b.addEventListener("click",()=>{db.settings.reportBasis=b.dataset.rb;persist();renderReport()}));
+  $("#rp-prev").addEventListener("click",()=>{RP.offset--;renderReport()});
+  $("#rp-next").addEventListener("click",()=>{if(RP.offset<0){RP.offset++;renderReport()}});
+  $("#rp-from").addEventListener("change",e=>{RP.from=e.target.value;renderReport()});
+  $("#rp-to").addEventListener("change",e=>{RP.to=e.target.value;renderReport()});
+}
+
 /* ---------- Settings ---------- */
 function renderSettings(){
   const s=db.settings;
@@ -928,13 +1123,14 @@ function renderSettings(){
     LOCS.filter(l=>l.id!=="other").map(l=>`<tr><td>${l.label} meals tax</td><td><input class="t money" type="number" step="0.01" data-rate="${l.id}" value="${s.local[l.id]}" aria-label="${l.label} meals tax percent"></td><td class="c">${combinedRate(l.id).toFixed(1)}%</td></tr>`).join("");
   $("#def-tip").innerHTML=Array.from({length:16},(_,i)=>i+10).map(t=>`<option value="${t}" ${t===s.defTip?"selected":""}>${t}%</option>`).join("");
   $("#def-basis").value=s.defBasis; $("#me-name").value=s.me; $("#theme").value=s.theme||"";
+  $("#week-start").value=String(s.weekStart||0); $("#budget").value=s.budget||"";
 }
 function applyTheme(){const t=db.settings.theme;if(t)document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
 function download(name,data,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-function csv(){
+function csv(filter){
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};
   const head=["Date","Restaurant","Location","Food","Drinks","Food & drink","Tax","Total with tax","Tip %","Tip basis","Tip","Grand total","Split","People","Rating","Comments","Dishes"];
-  const rows=db.visits.map(v=>{const c=v.calc||{};return [v.date,v.name,(LOCS.find(l=>l.id===v.loc)||{}).label,c.food?.toFixed(2),c.drink?.toFixed(2),c.pre?.toFixed(2),c.tax?.toFixed(2),c.bill?.toFixed(2),v.tip,v.basis==="post"?"Total with tax":"Food & drink",c.tip?.toFixed(2),c.grand?.toFixed(2),
+  const rows=db.visits.filter(filter||(()=>true)).map(v=>{const c=v.calc||{};return [v.date,v.name,(LOCS.find(l=>l.id===v.loc)||{}).label,c.food?.toFixed(2),c.drink?.toFixed(2),c.pre?.toFixed(2),c.tax?.toFixed(2),c.bill?.toFixed(2),v.tip,v.basis==="post"?"Total with tax":"Food & drink",c.tip?.toFixed(2),c.grand?.toFixed(2),
     v.split==="full"?"One check":v.split==="even"?`Even (${v.count})`:"By item",(c.shares||[]).length>1?(c.shares||[]).map(s=>`${s.name} ${s.amount.toFixed(2)}`).join("; "):"",v.rating||"",v.comment,(v.dishes||[]).map(d=>`${d.name}${d.rating?` (${d.rating}/5)`:""}${d.note?`: ${d.note}`:""}`).join(" | ")].map(q).join(",")});
   return [head.join(","),...rows].join("\n");
 }
@@ -946,6 +1142,8 @@ function bindSettings(){
   $("#def-basis").addEventListener("change",e=>{db.settings.defBasis=e.target.value;persist()});
   $("#me-name").addEventListener("change",e=>{db.settings.me=e.target.value.trim();persist()});
   $("#theme").addEventListener("change",e=>{db.settings.theme=e.target.value;persist();applyTheme()});
+  $("#week-start").addEventListener("change",e=>{db.settings.weekStart=+e.target.value;persist()});
+  $("#budget").addEventListener("change",e=>{const v=parseFloat(e.target.value);db.settings.budget=isFinite(v)&&v>0?v:0;persist()});
   $("#export-csv").addEventListener("click",()=>{if(!db.visits.length){toast("No visits to export yet.");return}download(`tab-and-tally-${today()}.csv`,csv(),"text/csv");toast("Exported CSV.")});
   $("#export-json").addEventListener("click",()=>{download(`tab-and-tally-backup-${today()}.json`,JSON.stringify(db,null,1),"application/json");toast("Saved backup.")});
   $("#import-json").addEventListener("change",e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.visits))throw 0;
@@ -957,12 +1155,12 @@ function bindSettings(){
 
 /* ---------- Shell ---------- */
 function show(v){$$(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));$$("nav.tabs button").forEach(b=>b.dataset.view===v?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
-  if(v==="history")renderHistory(); if(v==="settings")renderSettings(); window.scrollTo({top:0})}
+  if(v==="history")renderHistory(); if(v==="reports")renderReport(); if(v==="settings")renderSettings(); window.scrollTo({top:0})}
 function renderRestList(){$("#rest-list").innerHTML=Object.values(db.places).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.name)}">`).join("")}
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2800)}
 
 load(); applyTheme(); S=fresh();
-renderLocSelect(); renderRestList(); bindNew(); bindOcr(); bindHistory(); bindSettings();
+renderLocSelect(); renderRestList(); bindNew(); bindOcr(); bindHistory(); bindReports(); bindSettings();
 $$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
 syncForm();
 importFromHash();
